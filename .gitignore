@@ -8,12 +8,8 @@ __pycache__/
 .venv/
 venv/
 
-# Data (raw ticks can be large)
-data/raw/
-data/processed/
-
-# MLflow local store
-mlruns/
+# Data and MLflow runs are intentionally tracked for reproducibility
+data/processed/*.tmp
 
 # Notebooks checkpoints
 notebooks/.ipynb_checkpoints/

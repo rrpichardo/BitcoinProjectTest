@@ -1,0 +1,14 @@
+artifact_uri: /Users/ricopichardo/Documents/Bitcoin/mlruns/347825080588366465/a2a754ea534e4bfcb0c1e6abc76ed28c/artifacts
+end_time: 1775409307578
+entry_point_name: ''
+experiment_id: '347825080588366465'
+lifecycle_stage: active
+run_id: a2a754ea534e4bfcb0c1e6abc76ed28c
+run_name: logistic_regression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1775409304848
+status: 3
+tags: []
+user_id: ricopichardo

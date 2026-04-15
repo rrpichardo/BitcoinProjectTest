@@ -1,0 +1,24 @@
+artifact_path: /Users/ricopichardo/Library/Mobile Documents/com~apple~CloudDocs/CMU/CMU/Classes/Mini
+  4/Operationalizing AI/BitcoinProject/mlruns/1/models/m-b87151b4ad6c4446aaa8b97db2962a9e/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.7
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.2.2
+    skops_trusted_types: null
+mlflow_version: 3.10.1
+model_id: m-b87151b4ad6c4446aaa8b97db2962a9e
+model_size_bytes: 1291
+model_uuid: m-b87151b4ad6c4446aaa8b97db2962a9e
+prompts: null
+run_id: 237fc3c9bcd640868ebc22ecd590532b
+utc_time_created: '2026-04-07 08:20:10.625335'

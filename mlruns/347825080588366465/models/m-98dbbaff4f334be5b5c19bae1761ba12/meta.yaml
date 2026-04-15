@@ -1,0 +1,10 @@
+artifact_location: /Users/ricopichardo/Documents/Bitcoin/mlruns/347825080588366465/models/m-98dbbaff4f334be5b5c19bae1761ba12/artifacts
+creation_timestamp: 1775412328334
+experiment_id: '347825080588366465'
+last_updated_timestamp: 1775412330570
+model_id: m-98dbbaff4f334be5b5c19bae1761ba12
+model_type: null
+name: model
+source_run_id: d7b358da97cb478fa41fb8716036e997
+status: 2
+status_message: null

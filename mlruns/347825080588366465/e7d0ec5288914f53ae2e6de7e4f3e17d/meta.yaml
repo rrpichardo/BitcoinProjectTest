@@ -1,0 +1,14 @@
+artifact_uri: /Users/ricopichardo/Documents/Bitcoin/mlruns/347825080588366465/e7d0ec5288914f53ae2e6de7e4f3e17d/artifacts
+end_time: 1775446306711
+entry_point_name: ''
+experiment_id: '347825080588366465'
+lifecycle_stage: active
+run_id: e7d0ec5288914f53ae2e6de7e4f3e17d
+run_name: zscore_baseline
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1775446306607
+status: 3
+tags: []
+user_id: ricopichardo
