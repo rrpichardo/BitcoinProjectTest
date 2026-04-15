@@ -1,0 +1,97 @@
+{
+  "winner": "B",
+  "variants": [
+    {
+      "variant": "A",
+      "rationale": "Baseline (6 features)",
+      "features": [
+        "log_return",
+        "spread_bps",
+        "vol_60s",
+        "mean_return_60s",
+        "trade_intensity_60s",
+        "n_ticks_60s"
+      ],
+      "tau": 0.70553,
+      "run_id": "e65db3a9f83546df9ee22ef4b870428e",
+      "val_pr_auc": 0.3471,
+      "val_f1": 0.4295,
+      "val_precision": 0.4446,
+      "val_recall": 0.4154,
+      "test_pr_auc": 0.1317,
+      "test_f1": 0.124,
+      "test_precision": 0.1128,
+      "test_recall": 0.1378
+    },
+    {
+      "variant": "B",
+      "rationale": "A + spread_mean_60s (liquidity signal)",
+      "features": [
+        "log_return",
+        "spread_bps",
+        "vol_60s",
+        "mean_return_60s",
+        "trade_intensity_60s",
+        "n_ticks_60s",
+        "spread_mean_60s"
+      ],
+      "tau": 0.701511,
+      "run_id": "2b9796edb335404cb2deb17f2c9226e2",
+      "val_pr_auc": 0.358,
+      "val_f1": 0.4463,
+      "val_precision": 0.466,
+      "val_recall": 0.4282,
+      "test_pr_auc": 0.1459,
+      "test_f1": 0.1359,
+      "test_precision": 0.1285,
+      "test_recall": 0.1441
+    },
+    {
+      "variant": "C",
+      "rationale": "A + spread_mean_60s + price_range_60s (full candidate set)",
+      "features": [
+        "log_return",
+        "spread_bps",
+        "vol_60s",
+        "mean_return_60s",
+        "trade_intensity_60s",
+        "n_ticks_60s",
+        "spread_mean_60s",
+        "price_range_60s"
+      ],
+      "tau": 0.669135,
+      "run_id": "4ba9fb9463234702a17063bae635a3ad",
+      "val_pr_auc": 0.3517,
+      "val_f1": 0.4366,
+      "val_precision": 0.3984,
+      "val_recall": 0.4828,
+      "test_pr_auc": 0.1589,
+      "test_f1": 0.1576,
+      "test_precision": 0.1364,
+      "test_recall": 0.1866
+    },
+    {
+      "variant": "D",
+      "rationale": "C \u2212 spread_abs \u2212 n_ticks_60s (drop correlated features)",
+      "features": [
+        "log_return",
+        "spread_bps",
+        "vol_60s",
+        "mean_return_60s",
+        "trade_intensity_60s",
+        "spread_mean_60s",
+        "price_range_60s"
+      ],
+      "tau": 0.669133,
+      "run_id": "e2147ddb2093413fb86a3a7485aef92f",
+      "val_pr_auc": 0.3517,
+      "val_f1": 0.4366,
+      "val_precision": 0.3984,
+      "val_recall": 0.4828,
+      "test_pr_auc": 0.1589,
+      "test_f1": 0.1576,
+      "test_precision": 0.1364,
+      "test_recall": 0.1866
+    }
+  ]
+}
