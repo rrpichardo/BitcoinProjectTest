@@ -53,6 +53,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.ingestor
     container_name: ingestor
+    profiles:
+      - live-ingest
     depends_on:
       kafka:
         condition: service_healthy
@@ -75,18 +77,51 @@ services:
       - "5001:5000"
     command: >
       mlflow server
-      --backend-store-uri sqlite:////mlruns/mlflow_ui.db
-      --default-artifact-root /mlruns/artifacts
+      --backend-store-uri sqlite:////mlruns/mlflow_tracking.db
+      --artifacts-destination /mlruns/artifacts
+      --serve-artifacts
       --host 0.0.0.0
       --port 5000
     volumes:
       - ../mlruns:/mlruns
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     # Cap resource usage for the MLflow server
     deploy:
       resources:
         limits:
           memory: 1G
           cpus: "1.0"
+
+  # FastAPI prediction service (Week 4 thin slice) — serves /health, /predict, /version, /metrics
+  api:
+    build:
+      # Build context is the repo root so the Dockerfile can COPY api/ and models/artifacts/
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: api
+    ports:
+      # Host 8000 -> container 8000 (uvicorn)
+      - "8000:8000"
+    environment:
+      MODEL_PATH: models/artifacts/lr_pipeline.pkl
+      MODEL_VERSION: v1.0
+    # Cap resource usage to keep the stack friendly on laptops
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    healthcheck:
+      # Hit /health from inside the container so compose knows when API is ready
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
 
 volumes:
   kafka-data:

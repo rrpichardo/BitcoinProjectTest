@@ -1,52 +1,47 @@
-# Model Evaluation Summary — Milestone 3
-**Project:** BTC Volatility Spike Detector  
-**Date:** 2026-04-07  
+# Model Evaluation Summary — Selected-base Snapshot (Run B)
 
----
+**Project:** BTC Volatility Spike Detector
+**Artifact snapshot:** 2026-04-07 (submitted run)
+**MLflow run_id:** `f4deb36327a74a4f9aa1f6433f169f28`
 
 ## Evaluation Setup
 
 | Parameter | Value |
 |---|---|
-| Target | `vol_spike` — 1 if 60-second realized volatility ≥ τ = 0.000048 (P85) |
-| Target horizon | 60 seconds |
+| Target | `vol_spike` |
+| Label rule | `future_vol_60s >= 0.000048` |
 | Features | `log_return`, `spread_bps`, `vol_60s`, `mean_return_60s`, `trade_intensity_60s`, `n_ticks_60s`, `spread_mean_60s` |
-| Validation strategy | Time-based splits with no shuffling |
-| Split | 60% Train / 20% Validation / 20% Test (by row count) |
-| Primary metric | PR-AUC (precision-recall area under curve) |
+| Validation strategy | Strict chronological split (60% / 20% / 20%) |
+| Primary comparison metric | PR-AUC |
 
----
+## Dataset Context
 
-## Dataset Context & Regime Shift
+| Split | Rows | Spike rate |
+|---|---|---|
+| Train (0–60%) | 368,311 | 15.4% |
+| Validation (60–80%) | 122,771 | 14.1% |
+| Test (80–100%) | 122,771 | 7.0% |
 
-The dataset spans approximately 65 hours of continuous BTC-USD tick data (2026-04-04 22:54 → 2026-04-07 15:54 UTC), with ~631K raw ticks producing 613,853 labelled feature rows.
-
-| Split | Rows | Spike Rate | Period |
-|---|---|---|---|
-| Train | 368,311 | **15.4%** | Earlier collection window |
-| Validation | 122,771 | **14.1%** | Mid collection window |
-| Test | 122,771 | **7.0%** | Later collection window |
-
-The spike rate varies from 7.0% to 15.4% across splits, reflecting genuine market-regime changes across the collection window. Train and validation are relatively balanced, while the test window landed on a quieter stretch (7.0%). The Logistic Regression model uses `class_weight="balanced"` to compensate for class imbalance during training.
-
----
+Test split time range: `2026-04-07 00:12:16 UTC` -> `2026-04-07 15:54:58 UTC`.
+The evaluation is time-ordered with no shuffling. The label rate changes across windows, reflecting genuine market regime shifts within the ~65-hour collection period.
 
 ## Results
 
-| Model | Val PR-AUC | Test PR-AUC | Val F1 | Test F1 |
+| Model | Validation PR-AUC | Test PR-AUC | Validation F1 (best) | Test F1 (best) |
 |---|---|---|---|---|
-| Z-score baseline (sigmoid-calibrated, `z > 2.0`) | 0.3270 | 0.1340 | 0.3868 | 0.1487 |
-| **Logistic Regression v1 (Variant B, 7 features)** | **0.3580** | **0.1459** | **0.4463** | **0.1359** |
+| Z-score baseline (`vol_60s`, `z >= 2.0`) | 0.3270 | 0.1340 | 0.3868 | 0.1487 |
+| Logistic Regression selected-base | 0.3580 | 0.1459 | 0.4463 | 0.1658 |
 
-**Baseline parameters:** `zscore_threshold = 2.0`, feature = `vol_60s`, calibrated on train mean/std, pseudo-probabilities via sigmoid transform.  
-**LR parameters:** `C = 0.1`, `solver = lbfgs`, `class_weight = balanced`, `tau = 0.7015` (best-F1 on validation set).
+## Logistic Regression Operating Point
 
----
+| Metric | Value |
+|---|---|
+| Threshold (`tau`) | 0.7015 |
+| Validation F1 @ tau | 0.4463 |
+| Test F1 @ tau | 0.1359 |
+| Test predicted positive rate | 7.9% |
+| Test actual positive rate | 7.0% |
 
 ## Conclusion
 
-The Logistic Regression model **outperforms the z-score baseline on both val and test PR-AUC** (test PR-AUC 0.1459 vs 0.1340), demonstrating that the learned combination of 7 features performs better than a single-feature rule.
-
-The val-to-test PR-AUC drop (0.3580 → 0.1459) reflects a **market regime shift**, not model failure. The test window captured a quieter period with only a 7.0% spike rate, compared to 14.1% in validation. Both models exhibit the same directional drop, confirming the cause is distributional rather than overfitting.
-
-Our strict temporal split (train → val → test with no shuffling) avoids data leakage that would inflate metrics under shuffled evaluation. The test set performance drop is specifically explained by the test window landing on a low-volatility regime, not by model degradation.
+The Logistic Regression artifact is the selected-base model because it outperforms the z-score baseline on both validation and held-out test PR-AUC under the same chronological split. The val-to-test PR-AUC drop (0.3580 -> 0.1459) is driven by the test window landing on a quieter market regime (7.0% spike rate vs 14.1% in validation), not overfitting. The handoff package ships the matching model pickle, checksum, metadata, predictions file, and Evidently HTML report for this snapshot.

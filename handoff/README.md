@@ -1,102 +1,92 @@
 # BTC Volatility Spike Detector — Handoff Package
 
-## Model Selection: Selected-Base
+## Model Selection: Selected-base
 
-The deployed model is the **Logistic Regression pipeline** (`models/artifacts/lr_pipeline.pkl`), chosen as the selected-base model. It outperforms the z-score baseline on unseen test data (Test PR-AUC 0.1459 vs 0.1340) using a time-based evaluation split with no data leakage.
+This handoff ships the current selected-base model: the Logistic Regression pipeline at `handoff/models/artifacts/lr_pipeline.pkl`. It matches the current project runtime and slightly outperforms the z-score baseline on both validation and held-out test PR-AUC under the latest time-ordered split.
 
----
+## Exact Teammate Steps
 
-## How to Run
+Run the commands below from the repo root.
 
 ### 1. Install Requirements
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r handoff/requirements.txt
 ```
 
-Use Python 3.11 for local setup. The shipped dependency set and Docker images are aligned to Python 3.11.
-
-### 2. Set Up the .env File
-
-Copy the example and fill in your values:
+### 2. Set Up the `.env` File
 
 ```bash
-cp docker/.env.example .env
+cp handoff/.env.example .env
 ```
 
-Open `.env` and set `KAFKA_BOOTSTRAP_SERVERS` (default `localhost:9092`). The Coinbase API keys are optional — only needed for authenticated WebSocket channels.
+The defaults already match the local Docker stack. Edit `.env` only if you need local overrides.
 
-### 3. Run Docker Compose
-
-Start Kafka and MLflow:
+### 3. Start Docker Compose
 
 ```bash
-docker compose -f docker/compose.yaml up -d
+docker compose -f handoff/docker/compose.yaml up -d
 ```
 
-Wait for the Kafka healthcheck to pass (~20 seconds), then verify topics were created:
+This compose brings up Kafka, MLflow, and the FastAPI prediction service (`/health`, `/predict`, `/version`, `/metrics`). Add `--profile live-ingest` only if you also want the optional live ingestor container.
 
-```bash
-docker logs kafka-init
-```
+### 4. Load the Model from the Artifacts Folder
 
-### 4. Load the Model and Run Inference
-
-The model uses a **probability threshold of 0.7015** — a tick is predicted as a volatility spike when `y_prob >= 0.7015`.
+The bundle stores the decision threshold inside the pickle as `bundle["tau"]` (current value: `0.7015`). Use that saved value instead of hard-coding a threshold.
 
 ```python
 import pickle
 import pandas as pd
 
-with open("models/artifacts/lr_pipeline.pkl", "rb") as f:
+with open("handoff/models/artifacts/lr_pipeline.pkl", "rb") as f:
     bundle = pickle.load(f)
 
-pipeline     = bundle["pipeline"]      # sklearn Pipeline (StandardScaler + LogisticRegression)
-feature_cols = bundle["feature_cols"]  # list of 7 feature column names
-tau          = bundle["tau"]            # probability threshold (auto-selected from validation best-F1)
+pipeline = bundle["pipeline"]
+feature_cols = bundle["feature_cols"]
+tau = bundle["tau"]
 
-df      = pd.read_parquet("data_sample/features_slice.parquet")  # or your own features file
-X       = df[feature_cols].values
-y_prob  = pipeline.predict_proba(X)[:, 1]
-y_pred  = (y_prob >= tau).astype(int)
+df = pd.read_parquet("handoff/data_sample/features_slice.parquet")
+scores = pipeline.predict_proba(df[feature_cols].values)[:, 1]
+preds = (scores >= tau).astype(int)
 
-print(f"Spike rate: {y_pred.mean()*100:.1f}%")
+print(f"tau={tau:.4f}, rows={len(df)}, predicted_spike_rate={preds.mean():.4f}")
 ```
 
-Or use the inference script directly:
+## Package Notes
 
-```bash
-python models/infer.py \
-  --features data_sample/features_slice.csv \
-  --model    models/artifacts/lr_pipeline.pkl \
-  --output   predictions.csv
-```
-
----
+- `handoff/data_sample/` contains the required 10-minute raw slice and its matching feature slice.
+- `handoff/reports/predictions.csv` is the full held-out inference output from the current verified run.
+- `handoff/reports/train_vs_test.html` is the shipped Evidently report.
+- `handoff/SELECTED_BASE_NOTE.md` is the short selection note requested by the assignment.
 
 ## Package Contents
 
 ```
 handoff/
+├── .env.example
 ├── docker/
-│   ├── compose.yaml          Kafka + MLflow services
-│   ├── Dockerfile.ingestor   WebSocket ingestor container
-│   └── .env.example          Environment variable template
+│   ├── compose.yaml
+│   └── Dockerfile.ingestor
 ├── docs/
-│   ├── feature_spec.md       Feature definitions and label schema
-│   └── model_card_v1.md      Model card
+│   ├── feature_spec.md
+│   └── model_card_v1.md
 ├── models/
 │   └── artifacts/
-│       └── lr_pipeline.pkl   Trained sklearn pipeline (tau = 0.7015)
+│       ├── lr_pipeline.pkl
+│       ├── lr_pipeline.sha256
+│       └── metadata.json
 ├── data_sample/
-│   ├── raw_slice.parquet     First 10 minutes of raw tick data
-│   └── features_slice.csv    Corresponding labelled feature rows
+│   ├── raw_slice.ndjson
+│   ├── raw_slice.parquet
+│   ├── features_slice.csv
+│   └── features_slice.parquet
 ├── reports/
-│   ├── model_eval.pdf        Evaluation summary (Milestone 3)
-│   ├── train_vs_test.html    Evidently drift report
-│   └── predictions.csv       Full inference output [timestamp, y_true, y_prob, y_pred]
+│   ├── model_eval.pdf
+│   ├── predictions.csv
+│   └── train_vs_test.html
 ├── requirements.txt
-└── README.md                 This file
+├── README.md
+└── SELECTED_BASE_NOTE.md
 ```
